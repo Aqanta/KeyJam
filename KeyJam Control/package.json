@@ -1,0 +1,15 @@
+{
+  "name": "keyjam_control",
+  "version": "0.1.0",
+  "main": "app.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^29.0.1"
+  },
+  "dependencies": {
+    "serialport": "^12.0.0"
+  }
+}
