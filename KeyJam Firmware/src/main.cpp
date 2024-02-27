@@ -66,6 +66,11 @@ void loop() {
             }
             //TODO press key
             //TODO trigger key combo
+            //consumer keys
+            if ( currentBaseConfig["buttons"][i].contains( "consumerKey" ) && currentBaseConfig["buttons"][i]["consumerKey"].is_number()) {
+                Keyboard.consumerPress( currentBaseConfig["buttons"][i]["consumerKey"] );
+            }
+            //all other keys
             if ( currentBaseConfig["buttons"][i].contains( "keys" ) && !currentBaseConfig["buttons"][i]["keys"].empty()) {
                 if ( currentBaseConfig["buttons"][i]["keys"].size() > 1 ||
                      (currentBaseConfig["buttons"][i].contains( "hold" ) && currentBaseConfig["buttons"][i]["hold"])) {
@@ -106,6 +111,9 @@ void loop() {
                         Keyboard.release(((std::string) j).c_str()[0] );
                     }
                 }
+            }
+            if ( currentBaseConfig["buttons"][i].contains( "consumerKey" ) && currentBaseConfig["buttons"][i]["consumerKey"].is_number()) {
+                Keyboard.consumerRelease();
             }
             //TODO release key (if needed)
         }

@@ -96,51 +96,62 @@ const keyCodes = {
     F22: 0xF9,
     F23: 0xFA,
     F24: 0xFB,
-
-// Consumer keys, taken from TinyUSB and incremented by 255
-
-    POWER: 303,
-    RESET: 304,
-    SLEEP: 305,
-    BRIGHTNESS_INCREMENT: 366,
-    BRIGHTNESS_DECREMENT: 367,
-    WIRELESS_RADIO_CONTROLS: 267,
-    WIRELESS_RADIO_BUTTONS: 453,
-    WIRELESS_RADIO_LED: 454,
-    WIRELESS_RADIO_SLIDER_SWITCH: 455,
-    PLAY_PAUSE: 460,
-    SCAN_NEXT: 436,
-    SCAN_PREVIOUS: 437,
-    STOP: 438,
-    VOLUME: 479,
-    MUTE: 481,
-    BASS: 482,
-    TREBLE: 483,
-    BASS_BOOST: 484,
-    VOLUME_INCREMENT: 488,
-    VOLUME_DECREMENT: 489,
-    BASS_INCREMENT: 593,
-    BASS_DECREMENT: 594,
-    TREBLE_INCREMENT: 595,
-    TREBLE_DECREMENT: 596,
-    AL_CONSUMER_CONTROL_CONFIGURATION: 642,
-    AL_EMAIL_READER: 649,
-    AL_CALCULATOR: 657,
-    AL_LOCAL_BROWSER: 659,
-    AC_SEARCH: 800,
-    AC_HOME: 802,
-    AC_BACK: 803,
-    AC_FORWARD: 804,
-    AC_STOP: 805,
-    AC_REFRESH: 806,
-    AC_BOOKMARKS: 809,
-    AC_PAN: 823
-
 }
+
+let consumerKeyCodes = {
+    // Power Control
+    POWER: 0x0030,
+    RESET: 0x0031,
+    SLEEP: 0x0032,
+// Screen Brightness
+    BRIGHTNESS_INCREMENT: 0x006F,
+    BRIGHTNESS_DECREMENT: 0x0070,
+// These HID usages operate only on mobile systems (battery powered) and
+// require Windows 8 (build 8302 or greater).
+    WIRELESS_RADIO_CONTROLS: 0x000C,
+    WIRELESS_RADIO_BUTTONS: 0x00C6,
+    WIRELESS_RADIO_LED: 0x00C7,
+    WIRELESS_RADIO_SLIDER_SWITCH: 0x00C8,
+// Media Control
+    PLAY_PAUSE: 0x00CD,
+    SCAN_NEXT: 0x00B5,
+    SCAN_PREVIOUS: 0x00B6,
+    STOP: 0x00B7,
+    VOLUME: 0x00E0,
+    MUTE: 0x00E2,
+    BASS: 0x00E3,
+    TREBLE: 0x00E4,
+    BASS_BOOST: 0x00E5,
+    VOLUME_INCREMENT: 0x00E9,
+    VOLUME_DECREMENT: 0x00EA,
+    BASS_INCREMENT: 0x0152,
+    BASS_DECREMENT: 0x0153,
+    TREBLE_INCREMENT: 0x0154,
+    TREBLE_DECREMENT: 0x0155,
+// Application Launcher
+    AL_CONSUMER_CONTROL_CONFIGURATION: 0x0183,
+    AL_EMAIL_READER: 0x018A,
+    AL_CALCULATOR: 0x0192,
+    AL_LOCAL_BROWSER: 0x0194,
+// Browser/Explorer Specific
+    AC_SEARCH: 0x0221,
+    AC_HOME: 0x0223,
+    AC_BACK: 0x0224,
+    AC_FORWARD: 0x0225,
+    AC_STOP: 0x0226,
+    AC_REFRESH: 0x0227,
+    AC_BOOKMARKS: 0x022A,
+// Mouse Horizontal scroll
+    AC_PAN: 0x0238,
+};
 
 function getKeyFromCode( code ) {
     if ( typeof code === "string" ) {
         return code;
     }
-    return Object.keys( keyCodes ).filter( k => keyCodes[k] === code )[0];
+    return Object.keys( keyCodes ).filter( k => keyCodes[k] === code )[0] ?? code;
+}
+
+function getConsumerKeyFromCode( code ) {
+    return Object.keys( consumerKeyCodes ).filter( k => consumerKeyCodes[k] === code )[0] ?? code;
 }

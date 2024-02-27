@@ -22,9 +22,10 @@ function createButtonDisplay( b, i ) {
         <div class="pt-3">${i}</div>
         ${b.keys ? b.keys.map( key => {
         return `<span class="tag ${getKeyTagClass( getKeyType( key ) )}">
-${getKeyFromCode( key ) ? getKeyFromCode( key )[0] === "F" ? getKeyFromCode( key ) : getKeyFromCode( key ).toLowerCase() : key}
+${getKeyFromCode( key )[0] === "F" ? getKeyFromCode( key ) : getKeyFromCode( key ).toLowerCase()}
 </span>`
     } ).join( " " ) : ""} 
+        ${b.consumerKey ? `<span class='tag is-danger'>${getConsumerKeyFromCode(b.consumerKey)}</span>` : ''}
         ${b.macro ? "<span class='tag is-link'>macro</span>" : ''}
     </div>
 `;
@@ -47,9 +48,11 @@ function loadEditButtonModal() {
     document.getElementById( "editButtonModalKeys" ).innerHTML = currentlyEditingButton.buttonMap.keys.map( key => {
         return `
 <span class="tag is-large ${getKeyTagClass( getKeyType( key ) )}" style="cursor: pointer" onclick="editButtonDeleteKey('${key}')">
-${getKeyFromCode( key ) ? getKeyFromCode( key )[0] === "F" ? getKeyFromCode( key ) : getKeyFromCode( key ).toLowerCase() : key}
+${getKeyFromCode( key )[0] === "F" ? getKeyFromCode( key ) : getKeyFromCode( key ).toLowerCase()}
 </span>`;
     } ).join( " " );
+    console.log(currentlyEditingButton.buttonMap.consumerKey);
+    document.getElementById( "editButtonConsumerSelect" ).value = getConsumerKeyFromCode(currentlyEditingButton.buttonMap.consumerKey) ?? "none"
     document.getElementById( "editButtonMacro" ).checked = !!currentlyEditingButton.buttonMap.macro;
 }
 
@@ -80,6 +83,12 @@ function editButtonDeleteKey( key ) {
 async function editButtonSave() {
     currentlyEditingButton.buttonMap.hold = currentlyEditingButton.buttonMap.keys?.length === 1;
     currentlyEditingButton.buttonMap.macro = !!document.getElementById( "editButtonMacro" ).checked;
+    let consumerKey = document.getElementById( "editButtonConsumerSelect" ).value;
+    if ( consumerKey !== "none" ) {
+        currentlyEditingButton.buttonMap.consumerKey = consumerKeyCodes[consumerKey];
+    } else {
+        currentlyEditingButton.buttonMap.consumerKey = false;
+    }
     let res = await electron.invoke( 'changeKey', {
         "number": currentlyEditingButton.number,
         "map": currentlyEditingButton.buttonMap,

@@ -31,7 +31,7 @@ app.whenReady().then( () => {
     } );
 
     ipcMain.handle( 'changeKey', async ( event, { number, map } ) => {
-        return serial.send( `update -b ${ number } -j ${ JSON.stringify( map ) }` ) ? 200 : "error";
+        return serial.send( `update -b ${number} -j ${JSON.stringify( map )}` ) ? 200 : "error";
     } );
 
     ipcMain.handle( 'loadProfile', async ( event, { type, name } ) => {

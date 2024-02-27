@@ -72,7 +72,7 @@ function send( msg ) {
 function invoke( msg ) {
     return new Promise( ( resolve, reject ) => {
         if ( msg === "list -c y -p base" ) {
-            send(msg);
+            send( msg );
             onNextJson = list => {
                 resolve( list );
             };
