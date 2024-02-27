@@ -14,7 +14,7 @@
 
 #define NEW_CONFIG false
 
-#include "setup.h"
+#include "config.h"
 #include "serialControl.h"
 #include "shiftRegister.h"
 
@@ -141,6 +141,7 @@ void loop() {
                 int valueIndex = 1 + getIndex( params, "j" );
                 if ( inputIndex > 0 && valueIndex > 0 ) {
                     currentBaseConfig["buttons"][atoi( params[inputIndex].c_str())] = json::parse( params[valueIndex] );
+                    saveConfigFile(currentBaseConfig);
                     SerialControl::send((String) "Updated Button" );
                 }
             }

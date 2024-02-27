@@ -20,3 +20,9 @@ void initializeConfigFile() {
     configFile.write( config.dump().c_str());
     configFile.close();
 }
+
+void saveConfigFile(const json& config){
+    File configFile = LittleFS.open( "/config.json", "w" );
+    configFile.write( config.dump().c_str());
+    configFile.close();
+}
