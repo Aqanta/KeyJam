@@ -3,10 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <title>KeyJam Control</title>
+    <link rel="stylesheet" type="text/css" href="bulma.css">
+    <script src="keycodes.js"></script>
+    <script src="helper.js"></script>
 </head>
-<body>
-<h1>KeyJam Control</h1>
-<button onclick="changeKey(1, 'a')">Change Key</button>
+<body class="p-1">
+<h1 class="title is-2">KeyJam Control</h1>
+<button class="button" onclick="loadProfile('base', 'default')">Load Default Base Profile</button>
+<div id="buttonHolder">
+
+</div>
+
+<div id="editButtonModal" class="modal">
+    <div class="modal-background" onclick="closeModal('editButton')"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Edit Button <span id="editButtonModalTitleNumber"></span></p>
+            <button class="delete" aria-label="close" onclick="closeModal('editButton')"></button>
+        </header>
+        <section class="modal-card-body">
+            <h4 class="title is-4">Keys</h4>
+            <div class="mb-2">
+                <span id="editButtonModalKeys"></span>
+                <div class="select">
+                    <select id="editButtonSelect">
+                        <option value=" "></option>
+                        <option value="'">'</option>
+                        <option value=",">,</option>
+                        <option value="-">-</option>
+                        <option value=".">.</option>
+                        <option value="/">/</option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value=";">;</option>
+                        <option value="=">=</option>
+                        <option value="[">[</option>
+                        <option value="\">\</option>
+                        <option value="]">]</option>
+                        <option value="^">^</option>
+                        <option value="`">`</option>
+                        <option value="a">a</option>
+                        <option value="b">b</option>
+                        <option value="c">c</option>
+                        <option value="d">d</option>
+                        <option value="e">e</option>
+                        <option value="f">f</option>
+                        <option value="g">g</option>
+                        <option value="h">h</option>
+                        <option value="i">i</option>
+                        <option value="j">j</option>
+                        <option value="k">k</option>
+                        <option value="l">l</option>
+                        <option value="m">m</option>
+                        <option value="n">n</option>
+                        <option value="o">o</option>
+                        <option value="p">p</option>
+                        <option value="q">q</option>
+                        <option value="r">r</option>
+                        <option value="s">s</option>
+                        <option value="t">t</option>
+                        <option value="u">u</option>
+                        <option value="v">v</option>
+                        <option value="w">w</option>
+                        <option value="x">x</option>
+                        <option value="y">y</option>
+                        <option value="F1">F1</option>
+                        <option value="F2">F2</option>
+                        <option value="F3">F3</option>
+                        <option value="F4">F4</option>
+                        <option value="F5">F5</option>
+                        <option value="F6">F6</option>
+                        <option value="F7">F7</option>
+                        <option value="F8">F8</option>
+                        <option value="F9">F9</option>
+                        <option value="F10">F10</option>
+                        <option value="F11">F11</option>
+                        <option value="F12">F12</option>
+                        <option value="F13">F13</option>
+                        <option value="F14">F14</option>
+                        <option value="F15">F15</option>
+                        <option value="F16">F16</option>
+                        <option value="F17">F17</option>
+                        <option value="F18">F18</option>
+                        <option value="F19">F19</option>
+                        <option value="F20">F20</option>
+                        <option value="F21">F21</option>
+                        <option value="F22">F22</option>
+                        <option value="F23">F23</option>
+                        <option value="F24">F24</option>
+                        <option value="LEFT_CTRL">left_ctrl</option>
+                        <option value="LEFT_SHIFT">left_shift</option>
+                        <option value="LEFT_ALT">left_alt</option>
+                        <option value="LEFT_SUPER">left_super</option>
+                        <option value="RIGHT_CTRL">right_ctrl< /option>
+                        <option value="RIGHT_SHIFT">right_shift</option>
+                        <option value="RIGHT_ALT">right_alt</option>
+                        <option value="RIGHT_SUPER">right_super</option>
+                        <option value="UP_ARROW">up_arrow</option>
+                        <option value="DOWN_ARROW">down_arrow</option>
+                        <option value="LEFT_ARROW">left_arrow</option>
+                        <option value="RIGHT_ARROW">right_arrow</option>
+                        <option value="BACKSPACE">backspace</option>
+                        <option value="TAB">tab</option>
+                        <option value="RETURN">return</option>
+                        <option value="MENU">menu</option>
+                        <option value="ESC">esc</option>
+                        <option value="INSERT">insert</option>
+                        <option value="DELETE">delete</option>
+                        <option value="PAGE_UP">page_up</option>
+                        <option value="PAGE_DOWN">page_down</option>
+                        <option value="HOME">home</option>
+                        <option value="END">end</option>
+                        <option value="CAPS_LOCK">caps_lock</option>
+                        <option value="PRINT_SCREEN">print_screen</option>
+                        <option value="SCROLL_LOCK">scroll_lock</option>
+                        <option value="PAUSE">pause</option>
+                        <option value="NUM_LOCK">num_lock</option>
+                        <option value="KP_SLASH">kp_slash</option>
+                        <option value="KP_ASTERISK">kp_asterisk</option>
+                        <option value="KP_MINUS">kp_minus</option>
+                        <option value="KP_PLUS">kp_plus</option>
+                        <option value="KP_ENTER">kp_enter</option>
+                        <option value="KP_1">kp_1</option>
+                        <option value="KP_2">kp_2</option>
+                        <option value="KP_3">k p_3</option>
+                        <option value="KP_4">kp_4</option>
+                        <option value="KP_5">kp_5</option>
+                        <option value="KP_6">kp_6</option>
+                        <option value="KP_7">kp_7</option>
+                        <option value="KP_8">kp_8</option>
+                        <option value="KP_9">kp_9</option>
+                        <option value="KP_0">kp_0</option>
+                        <option value="KP_DOT">kp_dot</option>
+                    </select>
+                </div>
+                <button class="button" onclick="editButtonAddKey()">+</button>
+            </div>
+            <h4 class="title is-4">Macro</h4>
+            <label class="checkbox">
+                <input type="checkbox" id="editButtonMacro">
+                Send Macro
+            </label>
+            <div id="editButtonModalMacroBody"></div>
+        </section>
+        <footer class="modal-card-foot">
+            <button onclick="editButtonSave()" class="button is-success">Save</button>
+            <button onclick="closeModal('editButton')" class="button">Cancel</button>
+        </footer>
+    </div>
+</div>
+
 <script src="index.js"></script>
 </body>
 </html>

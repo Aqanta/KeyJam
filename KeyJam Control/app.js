@@ -2,32 +2,39 @@
 const { app, BrowserWindow, ipcMain } = require( 'electron' );
 const path = require( 'node:path' );
 
+let appWindow;
+
 const serial = require( "./serial" );
 let profiles = [];
 
 const createWindow = () => {
-    const win = new BrowserWindow( {
-        width: 800,
-        height: 600,
+    appWindow = new BrowserWindow( {
+        width: 1000,
+        height: 800,
         webPreferences: {
             preload: path.join( __dirname, 'preload.js' )
         }
     } );
 
-    win.loadFile( './ui/index.html' );
+    appWindow.loadFile( './ui/index.html' );
 }
 app.whenReady().then( () => {
     createWindow();
-    if ( serial.initialize() ) {
-        serial.invoke( 'list', ( p ) => {
-            profiles = p;
-            //TODO let the render know we have the profiles
-        } )
-    } else {
-        //TODO handle non-loaded serial
-    }
 
-    ipcMain.handle( 'changeKey', async ( event, {input, key} ) => {
-        return serial.send( `update -i ${ input } -k ${ key }` ) ? 200 : "error";
-    } )
-} )
+    serial.scan( ( list ) => {
+        if ( list.map( v => v.path ).includes( 'COM8' ) ) {
+            console.log( "Connecting to board on COM8" );
+            serial.connect( 'COM8', () => {
+                serial.send( "list" );
+            } );
+        }
+    } );
+
+    ipcMain.handle( 'changeKey', async ( event, { number, map } ) => {
+        return serial.send( `update -b ${ number } -j ${ JSON.stringify( map ) }` ) ? 200 : "error";
+    } );
+
+    ipcMain.handle( 'loadProfile', async ( event, { type, name } ) => {
+        return await serial.invoke( "list -c y -p base" );
+    } );
+} );

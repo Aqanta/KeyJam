@@ -1,17 +1,22 @@
 #pragma once
+
 #include "LittleFS.h"
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 using namespace nlohmann::literals;
 
 void initializeConfigFile() {
     json config;
-    config["buttonMapping"] = {};
+    config["buttons"] = {};
     for ( int i = 0; i < BTN_N; i++ ) {
-        config["buttonMapping"][i] = "MACRO";
+        config["buttons"][i] = {
+                {"macro", false},
+                {"keys",  {}},
+                {"hold",  false}
+        };
     }
     File configFile = LittleFS.open( "/config.json", "w" );
-    configFile.write( config.dump( 2 ).c_str());
+    configFile.write( config.dump().c_str());
     configFile.close();
 }

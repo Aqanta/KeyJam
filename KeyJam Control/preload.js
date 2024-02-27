@@ -19,7 +19,7 @@ contextBridge.exposeInMainWorld( "electron", {
     },
     // From render to main and back again.
     invoke: ( channel, args ) => {
-        let validChannels = [ 'changeKey' ];
+        let validChannels = [ 'changeKey', 'loadProfile' ];
         if ( validChannels.includes( channel ) ) {
             return ipcRenderer.invoke( channel, args );
         }

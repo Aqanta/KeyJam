@@ -1,4 +1,5 @@
 #pragma once
+
 #include <Arduino.h>
 
 class SerialControl {
@@ -10,12 +11,20 @@ public:
             serialString += (char) Serial.read();
         }
         if ( serialString[serialString.length() - 1] == '\n' && serialString[serialString.length() - 2] == '\r' ) {
-            return serialString.substring( 0, serialString.length() - 2 );
+
+            String rtnString = serialString.substring( 0, serialString.length() - 2 );
+            serialString = "";
+            return rtnString;
         }
         return "";
     }
 
-    void send( String msg ) {
+    static void send( const std::string &msg ) {
+        Serial.write( msg.c_str());
+        Serial.write( "\r\n" );
+    }
+
+    static void send( const String &msg ) {
         Serial.write( msg.c_str());
         Serial.write( "\r\n" );
     }

@@ -4,7 +4,9 @@
   "main": "app.js",
   "license": "MIT",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "css-build": "node-sass --omit-source-map-url bulma.scss ui/bulma.css",
+    "css-watch": "npm run css-build -- --watch"
   },
   "devDependencies": {
     "electron": "^29.0.1"
