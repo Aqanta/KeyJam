@@ -10,17 +10,25 @@ module.exports = {
     connect,
     stopScan,
     send,
-    invoke
+    invoke,
+    on
 }
 
 let onNextJson;
+let onMsg;
 
 function onMessage( msg ) {
     console.log( "From serial:\t", msg );
     if ( onNextJson && msg[0] === "{" ) {
         onNextJson( JSON.parse( msg ) );
         onNextJson = "";
+    } else if(onMsg){
+        onMsg(msg);
     }
+}
+
+function on(callback){
+    onMsg = callback;
 }
 
 
