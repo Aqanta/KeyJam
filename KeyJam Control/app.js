@@ -6,6 +6,9 @@ let appWindow;
 
 const serial = require( "./serial" );
 let profiles = [];
+let buttonMap = [];
+
+const comPort = 3;
 
 const createWindow = () => {
     appWindow = new BrowserWindow( {
@@ -22,19 +25,24 @@ app.whenReady().then( () => {
     createWindow();
 
     serial.scan( ( list ) => {
-        if ( list.map( v => v.path ).includes( 'COM8' ) ) {
-            console.log( "Connecting to board on COM8" );
-            serial.connect( 'COM8', () => {
-                serial.send( "list" );
-            } );
+        console.log( list );
+        if ( list.map( v => v.path ).includes( `COM${comPort}` ) ) {
+            console.log( `Connecting to board on COM${comPort}` );
+            serial.connect( `COM${comPort}` )
+                .then( () => serial.invoke( "list -p map" ) )
+                .then( map => buttonMap = map );
         }
     } );
 
-    ipcMain.handle( 'changeKey', async ( event, { number, map } ) => {
-        return serial.send( `update -b ${number} -j ${JSON.stringify( map )}` ) ? 200 : "error";
+    ipcMain.handle( 'changeInput', async ( event, { input, mapping } ) => {
+        return serial.send( `update -i ${input} -j ${JSON.stringify( mapping )}` ) ? 200 : "error";
     } );
 
     ipcMain.handle( 'loadProfile', async ( event, { type, name } ) => {
-        return await serial.invoke( "list -c y -p base" );
+        console.log( "button map: ", buttonMap );
+        return {
+            map: buttonMap,
+            profile: await serial.invoke( "list -c y -p base" )
+        }
     } );
 } );

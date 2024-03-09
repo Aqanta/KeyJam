@@ -1,32 +1,43 @@
 //global variables
 let currentlyEditingButton = null;
 let currentProfileDate;
+let map;
 
 async function loadProfile( type, name ) {
-    currentProfileDate = await electron.invoke( 'loadProfile', { type, name } );
+    let data = await electron.invoke( 'loadProfile', { type, name } );
+    currentProfileDate = data.profile;
+    map = data.map;
+    console.log(currentProfileDate, map);
     loadButtons();
 }
 
 function loadButtons() {
-    let html = "<div class='is-flex is-flex-wrap-wrap'>"
-    currentProfileDate.buttons.forEach( ( b, i ) => {
-        html += createButtonDisplay( b, i );
-    } );
+    let html = "<div class='m-1 is-relative'>"
+    map.buttons.forEach( button => {
+        console.log(currentProfileDate.inputs[button.input], button.input);
+        html += createButtonDisplay( button, currentProfileDate.inputs[button.input] );
+    });
     html += "</div>";
     document.getElementById( 'buttonHolder' ).innerHTML = html;
 }
 
-function createButtonDisplay( b, i ) {
+function createButtonDisplay( button, mapping ) {
+    const size = 8;
     return `
-    <div class="box m-2 p-1" style="width: 7rem; height: 7rem;text-align: center;" onclick="openEditButtonModal(${i})">
-        <div class="pt-3">${i}</div>
-        ${b.keys ? b.keys.map( key => {
+    <div 
+        class="box m-2 p-1" 
+        style="text-align: center; position: absolute;
+            width: ${size}rem; height: ${size}rem;
+            top: ${button.y * (size + 1)}rem; left: ${button.x * (size + 1) }rem;" 
+        onclick="openEditButtonModal(${button.input})">
+        <div class="pt-3">${button.name}</div>
+        ${mapping.keys ? mapping.keys.map( key => {
         return `<span class="tag ${getKeyTagClass( getKeyType( key ) )}">
 ${getKeyFromCode( key )[0] === "F" ? getKeyFromCode( key ) : getKeyFromCode( key ).toLowerCase()}
 </span>`
     } ).join( " " ) : ""} 
-        ${b.consumerKey ? `<span class='tag is-danger'>${getConsumerKeyFromCode(b.consumerKey)}</span>` : ''}
-        ${b.macro ? "<span class='tag is-link'>macro</span>" : ''}
+        ${mapping.consumerKey ? `<span class='tag is-danger'>${getConsumerKeyFromCode(mapping.consumerKey)}</span>` : ''}
+        ${mapping.macro ? "<span class='tag is-link'>macro</span>" : ''}
     </div>
 `;
 }
@@ -35,7 +46,7 @@ function openEditButtonModal( buttonNumber ) {
     openModal( "editButton" );
     currentlyEditingButton = {
         "number": buttonNumber,
-        buttonMap: structuredClone( currentProfileDate.buttons[buttonNumber] )
+        buttonMap: structuredClone( currentProfileDate.inputs[buttonNumber] )
     };
     loadEditButtonModal();
 }
@@ -89,14 +100,14 @@ async function editButtonSave() {
     } else {
         currentlyEditingButton.buttonMap.consumerKey = false;
     }
-    let res = await electron.invoke( 'changeKey', {
-        "number": currentlyEditingButton.number,
-        "map": currentlyEditingButton.buttonMap,
+    let res = await electron.invoke( 'changeInput', {
+        "input": currentlyEditingButton.number,
+        "mapping": currentlyEditingButton.buttonMap,
     } );
     if ( res !== 200 ) {
         console.error( 'error saving key', res );
     } else {
-        currentProfileDate.buttons[currentlyEditingButton.number] = structuredClone( currentlyEditingButton.buttonMap );
+        currentProfileDate.inputs[currentlyEditingButton.number] = structuredClone( currentlyEditingButton.buttonMap );
         loadButtons();
         closeModal( "editButton" );
     }

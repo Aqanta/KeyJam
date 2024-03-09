@@ -5,9 +5,9 @@
 #include <sstream>
 
 //define pins here
-#define DATA 28
-#define LATCH 26
-#define CLOCK 27
+#define DATA 6
+#define LATCH 5
+#define CLOCK 7
 
 //define number of buttons
 #define BTN_N 8
@@ -59,7 +59,7 @@ void loop() {
     for ( int i = 0; i < BTN_N; i++ ) {
         if ( buttons[i] == 1 && previousButtons[i] == 0 ) {
             previousButtons[i] = 1;
-            if ( currentBaseConfig["buttons"][i].contains( "macro" ) && currentBaseConfig["buttons"][i]["macro"] ) {
+            if ( currentBaseConfig["inputs"][i].contains( "macro" ) && currentBaseConfig["inputs"][i]["macro"] ) {
                 std::stringstream s;
                 s << "press -k " << i;
                 SerialControl::send( s.str());
@@ -67,14 +67,14 @@ void loop() {
             //TODO press key
             //TODO trigger key combo
             //consumer keys
-            if ( currentBaseConfig["buttons"][i].contains( "consumerKey" ) && currentBaseConfig["buttons"][i]["consumerKey"].is_number()) {
-                Keyboard.consumerPress( currentBaseConfig["buttons"][i]["consumerKey"] );
+            if ( currentBaseConfig["inputs"][i].contains( "consumerKey" ) && currentBaseConfig["inputs"][i]["consumerKey"].is_number()) {
+                Keyboard.consumerPress( currentBaseConfig["inputs"][i]["consumerKey"] );
             }
             //all other keys
-            if ( currentBaseConfig["buttons"][i].contains( "keys" ) && !currentBaseConfig["buttons"][i]["keys"].empty()) {
-                if ( currentBaseConfig["buttons"][i]["keys"].size() > 1 ||
-                     (currentBaseConfig["buttons"][i].contains( "hold" ) && currentBaseConfig["buttons"][i]["hold"])) {
-                    for ( const auto &j: currentBaseConfig["buttons"][i]["keys"] ) {
+            if ( currentBaseConfig["inputs"][i].contains( "keys" ) && !currentBaseConfig["inputs"][i]["keys"].empty()) {
+                if ( currentBaseConfig["inputs"][i]["keys"].size() > 1 ||
+                     (currentBaseConfig["inputs"][i].contains( "hold" ) && currentBaseConfig["inputs"][i]["hold"])) {
+                    for ( const auto &j: currentBaseConfig["inputs"][i]["keys"] ) {
                         if ( j.is_number()) {
                             Keyboard.press( j );
                         } else {
@@ -82,7 +82,7 @@ void loop() {
                         }
                     }
                 } else {
-                    for ( const auto &j: currentBaseConfig["buttons"][i]["keys"] ) {
+                    for ( const auto &j: currentBaseConfig["inputs"][i]["keys"] ) {
                         if ( j.is_number()) {
                             Keyboard.write( j );
                         } else {
@@ -90,9 +90,9 @@ void loop() {
                         }
                     }
                 }
-                if ( currentBaseConfig["buttons"][i]["keys"].size() > 1 &&
-                     (!currentBaseConfig["buttons"][i].contains( "hold" ) || !currentBaseConfig["buttons"][i]["hold"])) {
-                    for ( const auto &j: currentBaseConfig["buttons"][i]["keys"] ) {
+                if ( currentBaseConfig["inputs"][i]["keys"].size() > 1 &&
+                     (!currentBaseConfig["inputs"][i].contains( "hold" ) || !currentBaseConfig["inputs"][i]["hold"])) {
+                    for ( const auto &j: currentBaseConfig["inputs"][i]["keys"] ) {
                         if ( j.is_number()) {
                             Keyboard.release( j );
                         } else {
@@ -103,8 +103,8 @@ void loop() {
             }
         } else if ( buttons[i] == 0 && previousButtons[i] == 1 ) {
             previousButtons[i] = 0;
-            if ( currentBaseConfig["buttons"][i].contains( "hold" ) && currentBaseConfig["buttons"][i]["hold"] ) {
-                for ( const auto &j: currentBaseConfig["buttons"][i]["keys"] ) {
+            if ( currentBaseConfig["inputs"][i].contains( "hold" ) && currentBaseConfig["inputs"][i]["hold"] ) {
+                for ( const auto &j: currentBaseConfig["inputs"][i]["keys"] ) {
                     if ( j.is_number()) {
                         Keyboard.release( j );
                     } else {
@@ -112,7 +112,7 @@ void loop() {
                     }
                 }
             }
-            if ( currentBaseConfig["buttons"][i].contains( "consumerKey" ) && currentBaseConfig["buttons"][i]["consumerKey"].is_number()) {
+            if ( currentBaseConfig["inputs"][i].contains( "consumerKey" ) && currentBaseConfig["inputs"][i]["consumerKey"].is_number()) {
                 Keyboard.consumerRelease();
             }
             //TODO release key (if needed)
@@ -136,13 +136,14 @@ void loop() {
         std::string command = cmd;
         if ( args > 0 && command == "update" ) {
             //TODO check for profiles
-            if ( getIndex( params, "b" ) >= 0 ) {
-                int inputIndex = 1 + getIndex( params, "b" );
+            if ( getIndex( params, "i" ) >= 0 ) {
+                int inputIndex = 1 + getIndex( params, "i" );
                 int valueIndex = 1 + getIndex( params, "j" );
                 if ( inputIndex > 0 && valueIndex > 0 ) {
-                    currentBaseConfig["buttons"][atoi( params[inputIndex].c_str())] = json::parse( params[valueIndex] );
-                    saveConfigFile(currentBaseConfig);
-                    SerialControl::send((String) "Updated Button" );
+                    SerialControl::send((String) "Trying to update button" );
+                    currentBaseConfig["inputs"][atoi( params[inputIndex].c_str())] = json::parse( params[valueIndex] );
+                    saveConfigFile( currentBaseConfig );
+                    SerialControl::send((String) "Updated Input" );
                 }
             }
             //TODO Handle rotary encoders
@@ -151,6 +152,8 @@ void loop() {
                 SerialControl::send( currentBaseConfig.dump());
             } else if ( getIndex( params, "c" ) >= 0 && getIndex( params, "p" ) >= 0 && params[getIndex( params, "p" ) + 1] == "app" ) {
                 SerialControl::send( currentProfileConfig.dump());
+            } else if ( getIndex( params, "p" ) >= 0 && params[getIndex( params, "p" ) + 1] == "map" ) {
+                SerialControl::send( inputMap.dump());
             }
         }
         //TODO do something with the command

@@ -16,18 +16,18 @@ module.exports = {
 let onNextJson;
 
 function onMessage( msg ) {
+    console.log( "From serial:\t", msg );
     if ( onNextJson && msg[0] === "{" ) {
         onNextJson( JSON.parse( msg ) );
         onNextJson = "";
     }
-    console.log( "From serial:\t", msg );
 }
 
 
 function scan( callback ) {
     scanInterval = setInterval( async () => {
         const ports = await SerialPort.list();
-        if ( ports.length > 1 ) {
+        if ( ports.length > 0 ) {
             callback( ports );
         }
     }, 2500 );
@@ -38,30 +38,32 @@ function stopScan() {
     scanInterval = null;
 }
 
-function connect( path, callback ) {
-    stopScan();
-    port = new SerialPort( { path: path, baudRate: 14400, autoOpen: false, } );
-    port.on( 'open', function () {
-        connected = true;
-        callback();
-    } );
-    port.open( function ( err ) {
-        if ( err ) {
-            console.error( 'Error opening port: ', err.message )
-            return false;
-        }
+function connect( path ) {
+    return new Promise( ( resolve ) => {
+        stopScan();
+        port = new SerialPort( { path: path, baudRate: 14400, autoOpen: false, } );
+        port.on( 'open', function () {
+            connected = true;
+            resolve();
+        } );
+        port.open( function ( err ) {
+            if ( err ) {
+                console.error( 'Error opening port: ', err.message );
+                return false;
+            }
+        } )
+        parser = port.pipe( new ReadlineParser( { delimiter: '\r\n' } ) );
+        parser.on( 'data', onMessage );
     } )
-    parser = port.pipe( new ReadlineParser( { delimiter: '\r\n' } ) );
-    parser.on( 'data', onMessage );
 }
 
 function send( msg ) {
     //TODO check to see if initialized
 
     try {
+        console.log( "sending: ", msg );
         port.write( msg );
         port.write( '\r\n' );
-        console.log( msg );
     } catch ( e ) {
         console.error( "error sending serial port data", e );
         return false;
@@ -70,12 +72,10 @@ function send( msg ) {
 }
 
 function invoke( msg ) {
-    return new Promise( ( resolve, reject ) => {
-        if ( msg === "list -c y -p base" ) {
-            send( msg );
-            onNextJson = list => {
-                resolve( list );
-            };
-        }
+    return new Promise( ( resolve ) => {
+        send( msg );
+        onNextJson = list => {
+            resolve( list );
+        };
     } );
 }
