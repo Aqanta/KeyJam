@@ -9,7 +9,10 @@
 </head>
 <body class="p-1">
 <h1 class="title is-2">KeyJam Control</h1>
-<button class="button" onclick="loadProfile('base', 'default')">Load Default Base Profile</button>
+<div class="is-flex is-justify-content-space-between">
+    <button class="button" onclick="loadProfile('base', 'default')">Load Default Base Profile</button>
+    <button class="button" onclick="openMacroEditor()">Edit Macros</button>
+</div>
 <div id="buttonHolder">
 
 </div>
@@ -18,7 +21,7 @@
     <div class="modal-background" onclick="closeModal('editButton')"></div>
     <div class="modal-card">
         <header class="modal-card-head">
-            <p class="modal-card-title">Edit Button <span id="editButtonModalTitleNumber"></span></p>
+            <p class="modal-card-title">Edit Input <span id="editButtonModalTitleNumber"></span></p>
             <button class="delete" aria-label="close" onclick="closeModal('editButton')"></button>
         </header>
         <section class="modal-card-body">
@@ -184,11 +187,47 @@
                 <input type="checkbox" id="editButtonMacro">
                 Send Macro
             </label>
+            <div class="select">
+                <select id="editButtonMacroSelect">
+                </select>
+            </div>
             <div id="editButtonModalMacroBody"></div>
         </section>
         <footer class="modal-card-foot">
             <button onclick="editButtonSave()" class="button is-success">Save</button>
             <button onclick="closeModal('editButton')" class="button">Cancel</button>
+        </footer>
+    </div>
+</div>
+
+<div id="editMacrosModal" class="modal">
+    <div class="modal-background" onclick="closeModal('editMacros')"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Edit Macros</p>
+            <button class="delete" aria-label="close" onclick="closeModal('editMacros')"></button>
+        </header>
+        <section class="modal-card-body">
+            <h3 class="is-3">Macro List</h3>
+            <ul id="macroList">
+
+            </ul>
+            <hr>
+            <h3 class="is-3">New Macro</h3>
+            Name: <input type="text" class="input" id="newMacroName">
+            Type: <div class="select">
+                <select id="newMacroType">
+                    <option value="bash">Bash</option>
+                    <option value="GET">Web Request</option>
+                </select>
+            </div>
+            <br>
+            <input type="text" class="input" id="newMacroText">
+            <br>
+            <button class="button" onclick="addMacro()">Add</button>
+        </section>
+        <footer class="modal-card-foot">
+            <button onclick="closeModal('editMacros')" class="button">Close</button>
         </footer>
     </div>
 </div>

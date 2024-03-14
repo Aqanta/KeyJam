@@ -5,11 +5,14 @@ module.exports = {
     addMacro,
     getMacro,
     listMacro,
-    removeMacro
+    removeMacro,
+    setMacro,
+    getMacroByInput
 }
 
 let config = {
-    macros: []
+    macros: [],
+    setMacros: {}
 }
 readConfig().then( () => {
     //config is read in
@@ -74,10 +77,25 @@ function listMacro() {
 async function removeMacro( id ) {
     let index = config.macros.findIndex( m => m.id === id );
     if ( index > -1 ) {
-        config.splice( index, 1 );
+        config.macros.splice( index, 1 );
+        Object.keys( config.setMacros ).forEach( k => {
+            if ( config.setMacros[k] === id ) {
+                config.setMacros[k] = undefined;
+            }
+        } );
         await updateConfig();
         return true;
     } else {
         return false;
     }
+}
+
+async function setMacro( inputNumber, id ) {
+    config.setMacros[`input-${ inputNumber }`] = id;
+    await updateConfig();
+    return true;
+}
+
+function getMacroByInput( inputNumber ) {
+    return getMacro( config.setMacros[`input-${ inputNumber }`] );
 }

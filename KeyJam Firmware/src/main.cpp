@@ -3,14 +3,15 @@
 #include <Keyboard.h>
 #include <LittleFS.h>
 #include <sstream>
+#include <set>
 
 //define pins here
-#define DATA 6
-#define LATCH 5
-#define CLOCK 7
+#define DATA 5
+#define LATCH 7
+#define CLOCK 6
 
 //define number of buttons
-#define BTN_N 8
+#define BTN_N 16
 
 #define NEW_CONFIG false
 
@@ -24,8 +25,10 @@ using namespace nlohmann::literals;
 json currentBaseConfig;
 json currentProfileConfig;
 
-std::vector<int> buttons( BTN_N );
-std::vector<int> previousButtons( BTN_N );
+std::vector<int> inputs( BTN_N );
+std::vector<int> rawInputs( BTN_N );
+std::vector<int> previousInputs( BTN_N );
+std::set<int> encoderInputs;
 SerialControl serialControl = SerialControl();
 ShiftRegister buttonRegister = ShiftRegister( DATA, CLOCK, LATCH, BTN_N );
 
@@ -57,8 +60,8 @@ void setup() {
 
 void loop() {
     for ( int i = 0; i < BTN_N; i++ ) {
-        if ( buttons[i] == 1 && previousButtons[i] == 0 ) {
-            previousButtons[i] = 1;
+        if ( inputs[i] == 1 && previousInputs[i] == 0 ) {
+            previousInputs[i] = 1;
             if ( currentBaseConfig["inputs"][i].contains( "macro" ) && currentBaseConfig["inputs"][i]["macro"] ) {
                 std::stringstream s;
                 s << "press -k " << i;
@@ -101,8 +104,11 @@ void loop() {
                     }
                 }
             }
-        } else if ( buttons[i] == 0 && previousButtons[i] == 1 ) {
-            previousButtons[i] = 0;
+            if ( encoderInputs.find( i ) != encoderInputs.end()) {
+                inputs[i] = 0;
+            }
+        } else if ( inputs[i] == 0 && previousInputs[i] == 1 ) {
+            previousInputs[i] = 0;
             if ( currentBaseConfig["inputs"][i].contains( "hold" ) && currentBaseConfig["inputs"][i]["hold"] ) {
                 for ( const auto &j: currentBaseConfig["inputs"][i]["keys"] ) {
                     if ( j.is_number()) {
@@ -162,13 +168,44 @@ void loop() {
     delay( 10 );
 }
 
+std::vector<bool> encoderOn;
+
 void setup1() {
     //sets pin values
     buttonRegister.initialize();
+    for ( int i = 0; i < inputMap["encoders"].size(); i++ ) {
+        encoderInputs.insert((int) inputMap["encoders"][i]["s1"] );
+        encoderInputs.insert((int) inputMap["encoders"][i]["s2"] );
+        encoderOn.push_back( false );
+    }
 }
 
 void loop1() {
-    buttonRegister.pollRegister( buttons );
+    buttonRegister.pollRegister( rawInputs );
 
-    delay( 5 );
+    for ( int i = 0; i < rawInputs.size(); i++ ) {
+        if ( encoderInputs.find( i ) == encoderInputs.end()) {
+            inputs[i] = rawInputs[i];
+        }
+    }
+
+    for ( int i = 0; i < inputMap["encoders"].size(); i++ ) {
+        int s1 = inputMap["encoders"][i]["s1"];
+        int s2 = inputMap["encoders"][i]["s2"];
+        if ( rawInputs[s1] == 0 && rawInputs[s2] == 0 ) {
+            inputs[s1] = 0;
+            inputs[s2] = 0;
+            encoderOn[i] = false;
+        } else if ( !encoderOn[i] && rawInputs[s1] == 1 && rawInputs[s2] == 0 ) {
+            inputs[s1] = 1;
+            inputs[s2] = 0;
+            encoderOn[i] = true;
+        } else if ( !encoderOn[i] && rawInputs[s1] == 0 && rawInputs[s2] == 1 ) {
+            inputs[s1] = 0;
+            inputs[s2] = 1;
+            encoderOn[i] = true;
+        }
+    }
+
+    delayMicroseconds( 4 );
 }

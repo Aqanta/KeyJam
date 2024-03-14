@@ -17,7 +17,7 @@ void initializeConfigFile() {
                 {"macro",       false},
                 {"keys",        {}},
                 {"hold",        false},
-                {"consumerKey", 402}
+                {"consumerKey", false}
         };
     }
     File configFile = LittleFS.open( "/config.json", "w" );
@@ -33,8 +33,88 @@ void saveConfigFile( const json &config ) {
     configFile.close();
 }
 
-
 json inputMap = {
+        {"buttons", {
+                {
+                        {"name", "BTN_1"},
+                        {"x", 1},
+                        {"y", 0},
+                        {"input", 15}
+                },
+                {
+                        {"name", "BTN_2"},
+                        {"x", 2,},
+                        {"y", 0,},
+                        {"input", 2},
+                },
+                {
+                        {"name", "BTN_3"},
+                        {"x", 3},
+                        {"y", 0},
+                        {"input", 6}
+                },
+                {
+                        {"name", "BTN_4"},
+                        {"x", 0},
+                        {"y", 1},
+                        {"input", 14}
+                },
+                {
+                        {"name", "BTN_5"},
+                        {"x", 1},
+                        {"y", 1},
+                        {"input", 4}
+                },
+                {
+                        {"name", "BTN_6"},
+                        {"x", 2,},
+                        {"y", 1,},
+                        {"input", 5},
+                },
+                {
+                        {"name", "BTN_7"},
+                        {"x", 3},
+                        {"y", 1},
+                        {"input", 0}
+                },
+                {
+                        {"name", "BTN_8"},
+                        {"x", 0},
+                        {"y", 2},
+                        {"input", 8}
+                },
+                {
+                        {"name", "BTN_9"},
+                        {"x", 1},
+                        {"y", 2},
+                        {"input", 3}
+                },
+                {
+                        {"name", "BTN_10"},
+                        {"x", 2,},
+                        {"y", 2,},
+                        {"input", 1},
+                },
+                {
+                        {"name", "BTN_11"},
+                        {"x", 3},
+                        {"y", 2},
+                        {"input", 7}
+                }
+        }},
+        {"encoders", {
+                {
+                        {"name", "Dial"},
+                        {"x", 0},
+                        {"y", 0},
+                        {"buttonInput", 13},
+                        {"s1", 12},
+                        {"s2", 11}
+                }
+        }}
+};
+
+/*json inputMap = {
         {"buttons", {
                 {
                         {"name", "BTN_1"},
@@ -79,4 +159,4 @@ json inputMap = {
                         {"input", 4}
                 },
         }}
-};
+};*/

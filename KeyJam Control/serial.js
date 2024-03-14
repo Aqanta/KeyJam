@@ -15,20 +15,20 @@ module.exports = {
 }
 
 let onNextJson;
-let onMsg;
+let onMsg = {};
 
 function onMessage( msg ) {
     console.log( "From serial:\t", msg );
-    if ( onNextJson && msg[0] === "{" ) {
+    if ( onNextJson && (msg[0] === "{" || msg[0] === "[") ) {
         onNextJson( JSON.parse( msg ) );
         onNextJson = "";
-    } else if(onMsg){
-        onMsg(msg);
+    } else if ( Object.keys( onMsg ).includes( msg.match( /^\w*/ )[0] ) ) {
+        onMsg[msg.match( /^\w*/ )[0]](msg);
     }
 }
 
-function on(callback){
-    onMsg = callback;
+function on( command, callback ) {
+    onMsg[command] = callback;
 }
 
 

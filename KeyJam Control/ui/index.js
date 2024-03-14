@@ -5,39 +5,62 @@ let map;
 
 async function loadProfile( type, name ) {
     let data = await electron.invoke( 'loadProfile', { type, name } );
+    console.log(data);
     currentProfileDate = data.profile;
     map = data.map;
-    console.log(currentProfileDate, map);
     loadButtons();
 }
 
 function loadButtons() {
     let html = "<div class='m-1 is-relative'>"
     map.buttons.forEach( button => {
-        console.log(currentProfileDate.inputs[button.input], button.input);
         html += createButtonDisplay( button, currentProfileDate.inputs[button.input] );
-    });
+    } );
+    map.encoders.forEach( encoder => {
+        html += createRotaryDisplay( encoder );
+    } );
     html += "</div>";
     document.getElementById( 'buttonHolder' ).innerHTML = html;
 }
 
+const size = 8;
+
 function createButtonDisplay( button, mapping ) {
-    const size = 8;
     return `
     <div 
         class="box m-2 p-1" 
         style="text-align: center; position: absolute;
-            width: ${size}rem; height: ${size}rem;
-            top: ${button.y * (size + 1)}rem; left: ${button.x * (size + 1) }rem;" 
-        onclick="openEditButtonModal(${button.input})">
-        <div class="pt-3">${button.name}</div>
-        ${mapping.keys ? mapping.keys.map( key => {
-        return `<span class="tag ${getKeyTagClass( getKeyType( key ) )}">
-${getKeyFromCode( key )[0] === "F" ? getKeyFromCode( key ) : getKeyFromCode( key ).toLowerCase()}
+            width: ${ size }rem; height: ${ size }rem;
+            top: ${ button.y * ( size + 1 ) }rem; left: ${ button.x * ( size + 1 ) }rem;" 
+        onclick="openEditButtonModal(${ button.input })">
+        <div class="pt-3">${ button.name }</div>
+        ${ mapping.keys ? mapping.keys.map( key => {
+        return `<span class="tag ${ getKeyTagClass( getKeyType( key ) ) }">
+${ getKeyFromCode( key )[0] === "F" ? getKeyFromCode( key ) : getKeyFromCode( key ).toLowerCase() }
 </span>`
-    } ).join( " " ) : ""} 
-        ${mapping.consumerKey ? `<span class='tag is-danger'>${getConsumerKeyFromCode(mapping.consumerKey)}</span>` : ''}
-        ${mapping.macro ? "<span class='tag is-link'>macro</span>" : ''}
+    } ).join( " " ) : "" } 
+        ${ mapping.consumerKey ? `<span class='tag is-danger'>${ getConsumerKeyFromCode( mapping.consumerKey ) }</span>` : '' }
+        ${ mapping.macro ? "<span class='tag is-link'>macro</span>" : '' }
+    </div>
+`;
+}
+
+function createRotaryDisplay( encoder ) {
+    console.log( encoder );
+    return `
+    <div 
+        class="box m-2 p-1" 
+        style="text-align: center; position: absolute;
+            width: ${ size }rem; height: ${ size }rem;
+            top: ${ encoder.y * ( size + 1 ) }rem; left: ${ encoder.x * ( size + 1 ) }rem;
+            border-radius: ${ size }rem"
+        >
+        <div class="pt-3">${ encoder.name }</div>
+        <div class="is-flex is-flex-wrap-wrap buttons are-small" >
+            <div style="width: 50%"><button class="button" onclick="openEditButtonModal(${ encoder.s2 })">CCW</button></div>
+            <div style="width: 50%"><button class="button" onclick="openEditButtonModal(${ encoder.s1 })">CW</button></div>
+            <div style="width: 100%" class="has-text-centered"><button class="button" onclick="openEditButtonModal(${ encoder.buttonInput })">Click</button></div>
+        </div>
     </div>
 `;
 }
@@ -51,20 +74,27 @@ function openEditButtonModal( buttonNumber ) {
     loadEditButtonModal();
 }
 
-function loadEditButtonModal() {
+async function loadEditButtonModal() {
     document.getElementById( "editButtonModalTitleNumber" ).innerHTML = currentlyEditingButton.number;
     if ( currentlyEditingButton.buttonMap.keys?.length === undefined ) {
         currentlyEditingButton.buttonMap.keys = [];
     }
     document.getElementById( "editButtonModalKeys" ).innerHTML = currentlyEditingButton.buttonMap.keys.map( key => {
         return `
-<span class="tag is-large ${getKeyTagClass( getKeyType( key ) )}" style="cursor: pointer" onclick="editButtonDeleteKey('${key}')">
-${getKeyFromCode( key )[0] === "F" ? getKeyFromCode( key ) : getKeyFromCode( key ).toLowerCase()}
+<span class="tag is-large ${ getKeyTagClass( getKeyType( key ) ) }" style="cursor: pointer" onclick="editButtonDeleteKey('${ key }')">
+${ getKeyFromCode( key )[0] === "F" ? getKeyFromCode( key ) : getKeyFromCode( key ).toLowerCase() }
 </span>`;
     } ).join( " " );
-    console.log(currentlyEditingButton.buttonMap.consumerKey);
-    document.getElementById( "editButtonConsumerSelect" ).value = getConsumerKeyFromCode(currentlyEditingButton.buttonMap.consumerKey) ?? "none"
+    console.log( currentlyEditingButton.buttonMap.consumerKey );
+    document.getElementById( "editButtonConsumerSelect" ).value = getConsumerKeyFromCode( currentlyEditingButton.buttonMap.consumerKey ) ?? "none"
     document.getElementById( "editButtonMacro" ).checked = !!currentlyEditingButton.buttonMap.macro;
+
+    //load Macros into dropdown
+    let selected =  await electron.invoke( 'getMacroByInput', currentlyEditingButton.number );
+    let macros = await electron.invoke( 'listMacros' );
+    let html = `<option ${!selected ? "selected" : ""} value="none">None</option>`;
+    macros.forEach( m => html += `<option value="${m.id}" ${m.id === selected ? "selected" : ""}>${m.name}</option>`);
+    document.getElementById('editButtonMacroSelect').innerHTML = html;
 }
 
 function editButtonAddKey() {
@@ -93,7 +123,18 @@ function editButtonDeleteKey( key ) {
 
 async function editButtonSave() {
     currentlyEditingButton.buttonMap.hold = currentlyEditingButton.buttonMap.keys?.length === 1;
-    currentlyEditingButton.buttonMap.macro = !!document.getElementById( "editButtonMacro" ).checked;
+
+    const usingMacro = !!document.getElementById( "editButtonMacro" ).checked;
+    let selectedMacroID = document.getElementById("editButtonMacroSelect").value;
+    currentlyEditingButton.buttonMap.macro = usingMacro;
+    if(!usingMacro || selectedMacroID === "none"){
+        selectedMacroID = undefined;
+    }
+    await electron.invoke( 'setMacro', {
+        inputNumber: currentlyEditingButton.number,
+        macroID: selectedMacroID
+    } );
+
     let consumerKey = document.getElementById( "editButtonConsumerSelect" ).value;
     if ( consumerKey !== "none" ) {
         currentlyEditingButton.buttonMap.consumerKey = consumerKeyCodes[consumerKey];
@@ -111,4 +152,33 @@ async function editButtonSave() {
         loadButtons();
         closeModal( "editButton" );
     }
+}
+
+ function openMacroEditor(){
+    openModal( "editMacros" );
+    loadMacroEditor();
+}
+
+async function loadMacroEditor(){
+    let macros = await electron.invoke( 'listMacros' );
+
+    //list macros
+    let html = "";
+    macros.forEach( m => html += `<li>${m.name}<span class="pl-6" onclick="removeMacro('${m.id}')">X</span></li>`);
+    document.getElementById('macroList').innerHTML = html;
+}
+
+async function addMacro(){
+    let macro = {
+        name: document.getElementById("newMacroName").value,
+        type:document.getElementById("newMacroType").value,
+        text: document.getElementById("newMacroText").value
+    }
+    await electron.invoke( 'addMacro', macro );
+    await loadMacroEditor();
+}
+
+async function removeMacro(id){
+    await electron.invoke( 'removeMacro', id );
+    await loadMacroEditor();
 }

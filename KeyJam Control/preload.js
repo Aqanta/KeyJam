@@ -19,7 +19,7 @@ contextBridge.exposeInMainWorld( "electron", {
     },
     // From render to main and back again.
     invoke: ( channel, args ) => {
-        let validChannels = ['changeInput', 'loadProfile'];
+        let validChannels = ['changeInput', 'loadProfile', 'addMacro', 'listMacros', 'setMacro', 'removeMacro', 'getMacroByInput'];
         if ( validChannels.includes( channel ) ) {
             return ipcRenderer.invoke( channel, args );
         }
