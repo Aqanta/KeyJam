@@ -88,6 +88,7 @@ ${ getKeyFromCode( key )[0] === "F" ? getKeyFromCode( key ) : getKeyFromCode( ke
     console.log( currentlyEditingButton.buttonMap.consumerKey );
     document.getElementById( "editButtonConsumerSelect" ).value = getConsumerKeyFromCode( currentlyEditingButton.buttonMap.consumerKey ) ?? "none"
     document.getElementById( "editButtonMacro" ).checked = !!currentlyEditingButton.buttonMap.macro;
+    document.getElementById("editButtonHold").checked = !!currentlyEditingButton.buttonMap.hold;
 
     //load Macros into dropdown
     let selected =  await electron.invoke( 'getMacroByInput', currentlyEditingButton.number );
@@ -122,7 +123,7 @@ function editButtonDeleteKey( key ) {
 }
 
 async function editButtonSave() {
-    currentlyEditingButton.buttonMap.hold = currentlyEditingButton.buttonMap.keys?.length === 1;
+    currentlyEditingButton.buttonMap.hold = currentlyEditingButton.buttonMap.keys?.length === 1 ? document.getElementById("editButtonHold").checked : false;
 
     const usingMacro = !!document.getElementById( "editButtonMacro" ).checked;
     let selectedMacroID = document.getElementById("editButtonMacroSelect").value;

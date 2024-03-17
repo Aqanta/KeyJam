@@ -192,6 +192,7 @@
                 </select>
             </div>
             <div id="editButtonModalMacroBody"></div>
+            <label><input type="checkbox" id="editButtonHold"> Hold </label>
         </section>
         <footer class="modal-card-foot">
             <button onclick="editButtonSave()" class="button is-success">Save</button>
@@ -215,7 +216,8 @@
             <hr>
             <h3 class="is-3">New Macro</h3>
             Name: <input type="text" class="input" id="newMacroName">
-            Type: <div class="select">
+            Type:
+            <div class="select">
                 <select id="newMacroType">
                     <option value="bash">Bash</option>
                     <option value="GET">Web Request</option>

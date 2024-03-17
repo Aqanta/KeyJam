@@ -4,14 +4,15 @@ const path = require( 'node:path' );
 
 let appWindow;
 
-const serial = require( "./serial" );
+const loudness = require( 'loudness' );
 
+const serial = require( "./serial" );
 const config = require( "./config" );
 
 let profiles = [];
 let buttonMap = [];
 
-const comPort = 10;
+const comPort = 8;
 
 const createWindow = () => {
     appWindow = new BrowserWindow( {
@@ -32,7 +33,7 @@ app.whenReady().then( () => {
             serial.connect( `COM${comPort}` )
                 .then( () => serial.invoke( "list -p map" ) )
                 .then( map => buttonMap = map )
-                .then( () => serial.on( 'press', handMacro ) );
+                .then( () => serial.on( 'press', handlePress ) );
         }
     } );
 
@@ -205,16 +206,36 @@ app.whenReady().then( () => {
     } );
 } );
 
-const axios = require('axios');
-function handMacro( msg ) {
-    let macro = config.getMacroByInput( msg.match( /-k (\d)/ )[1] );
-    try {
-        switch ( macro.type ) {
-            case "GET":
-                axios.get( macro.text );
-                break;
+const axios = require( 'axios' );
+
+async function handlePress( msg ) {
+    if ( msg.includes( "-k" ) ) {
+        let macro = config.getMacroByInput( msg.match( /-k (\d)/ )[1] );
+        try {
+            switch ( macro.type ) {
+                case "GET":
+                    axios.get( macro.text );
+                    break;
+            }
+        } catch ( e ) {
+            console.error( e );
         }
-    }catch ( e ){
-        console.error(e);
+    } else if ( msg.includes( "-s" ) ) {
+        currentVolume = 100 - Number( msg.match( /-s (\d+)/ )[1] );
     }
 }
+
+let previousVolume = null;
+let currentVolume;
+
+setInterval( async () => {
+    if ( currentVolume !== previousVolume && currentVolume ) {
+        //console.log( "setting volume to:", currentVolume );
+        previousVolume = currentVolume
+        await loudness.setVolume( currentVolume );
+    } else if ( currentVolume !== previousVolume && currentVolume === 0 ) {
+        //console.log( "setting volume to:", currentVolume );
+        previousVolume = currentVolume
+        await loudness.setVolume( 1 );
+    }
+}, 200 );

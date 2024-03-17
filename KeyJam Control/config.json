@@ -13,8 +13,5 @@
       "id": "59a1f86a-e2ad-4729-b3ab-77c83376386e"
     }
   ],
-  "setMacros": {
-    "input-8": "84d8d5ed-6ae3-40c3-a8f1-788da4491130",
-    "input-3": "59a1f86a-e2ad-4729-b3ab-77c83376386e"
-  }
+  "setMacros": {}
 }
