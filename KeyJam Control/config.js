@@ -7,7 +7,14 @@ module.exports = {
     listMacro,
     removeMacro,
     setMacro,
-    getMacroByInput
+    getMacroByInput,
+    get defaultComPort() {
+        return config.defaultComPort;
+    },
+    set defaultComPort( port ) {
+        config.defaultComPort = port;
+        updateConfig();
+    }
 }
 
 let config = {

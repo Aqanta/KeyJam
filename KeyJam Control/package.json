@@ -6,17 +6,39 @@
   "scripts": {
     "start": "electron .",
     "css-build": "node-sass --omit-source-map-url bulma.scss ui/bulma.css",
-    "css-watch": "npm run css-build -- --watch"
+    "css-watch": "npm run css-build -- --watch",
+    "dist": "electron-builder",
+    "build": "electron-builder build"
   },
   "devDependencies": {
     "bulma": "^0.9.4",
     "electron": "^29.0.1",
+    "electron-builder": "^24.13.3",
     "node-sass": "^9.0.0"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.5.1",
+    "auto-launch": "^5.0.6",
     "axios": "^1.6.7",
+    "i": "^0.3.7",
     "loudness": "^0.4.2",
+    "npm": "^10.5.0",
     "serialport": "^12.0.0",
     "uuid": "^9.0.1"
+  },
+  "build": {
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "installerIcon": "icon.ico",
+      "perMachine": false
+    },
+    "portable": {
+      "artifactName": "KeyJam Control.exe",
+      "useZip": true
+    },
+    "icon": "icon.ico",
+    "productName": "KeyJam Control"
   }
 }

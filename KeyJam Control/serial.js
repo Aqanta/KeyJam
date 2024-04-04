@@ -11,19 +11,23 @@ module.exports = {
     stopScan,
     send,
     invoke,
-    on
+    on,
+    onClose: setOnClose,
+    disconnect
 }
 
 let onNextJson;
 let onMsg = {};
+let onClose;
 
 function onMessage( msg ) {
-    console.log( "From serial:\t", msg );
-    if ( onNextJson && (msg[0] === "{" || msg[0] === "[") ) {
+    if ( onNextJson && ( msg[0] === "{" || msg[0] === "[" ) ) {
         onNextJson( JSON.parse( msg ) );
         onNextJson = "";
     } else if ( Object.keys( onMsg ).includes( msg.match( /^\w*/ )[0] ) ) {
-        onMsg[msg.match( /^\w*/ )[0]](msg);
+        onMsg[msg.match( /^\w*/ )[0]]( msg );
+    } else {
+        console.log( "Unknown command from serial:\t", msg );
     }
 }
 
@@ -31,14 +35,15 @@ function on( command, callback ) {
     onMsg[command] = callback;
 }
 
+function setOnClose( callback ) {
+    onClose = callback
+}
+
 
 function scan( callback ) {
     scanInterval = setInterval( async () => {
-        const ports = await SerialPort.list();
-        if ( ports.length > 0 ) {
-            callback( ports );
-        }
-    }, 2500 );
+        callback( await SerialPort.list() );
+    }, 2000 );
 }
 
 function stopScan() {
@@ -62,6 +67,13 @@ function connect( path ) {
         } )
         parser = port.pipe( new ReadlineParser( { delimiter: '\r\n' } ) );
         parser.on( 'data', onMessage );
+        port.on( 'close', () => {
+            port = null;
+            parser = null;
+            if ( typeof onClose === "function" ) {
+                onClose();
+            }
+        } )
     } )
 }
 
@@ -69,7 +81,7 @@ function send( msg ) {
     //TODO check to see if initialized
 
     try {
-        console.log( "sending: ", msg );
+        //console.log( "sending: ", msg );
         port.write( msg );
         port.write( '\r\n' );
     } catch ( e ) {
@@ -86,4 +98,8 @@ function invoke( msg ) {
             resolve( list );
         };
     } );
+}
+
+function disconnect(){
+    port.close();
 }

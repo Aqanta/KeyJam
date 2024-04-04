@@ -1,6 +1,11 @@
 //electron setup
-const { app, BrowserWindow, ipcMain } = require( 'electron' );
+const { app, BrowserWindow, ipcMain, Menu, Tray } = require( 'electron' );
 const path = require( 'node:path' );
+
+const AutoLaunch = require( 'auto-launch' );
+let autoLauncher = new AutoLaunch( {
+    name: 'KeyJam Control',
+} );
 
 let appWindow;
 
@@ -11,30 +16,56 @@ const config = require( "./config" );
 
 let profiles = [];
 let buttonMap = [];
-
-const comPort = 8;
+let comList = [];
+let connected = false;
 
 const createWindow = () => {
     appWindow = new BrowserWindow( {
         width: 1000, height: 800, webPreferences: {
             preload: path.join( __dirname, 'preload.js' )
-        }
+        },
+        icon: path.join( __dirname, 'icon.ico' )
     } );
 
     appWindow.loadFile( './ui/index.html' );
 }
 app.whenReady().then( () => {
-    createWindow();
+    let tray = new Tray( path.join( __dirname, 'icon.ico' ) );
+    tray.setToolTip( 'KeyJam Control' );
+    tray.setContextMenu( Menu.buildFromTemplate( [
+        { label: 'Options', click: createWindow },
+        { label: 'Quit', click: () => app.quit() },
+    ] ) );
 
-    serial.scan( ( list ) => {
-        console.log( list );
-        if ( list.map( v => v.path ).includes( `COM${comPort}` ) ) {
-            console.log( `Connecting to board on COM${comPort}` );
-            serial.connect( `COM${comPort}` )
-                .then( () => serial.invoke( "list -p map" ) )
-                .then( map => buttonMap = map )
-                .then( () => serial.on( 'press', handlePress ) );
+    if ( app.isPackaged ) {
+        autoLauncher.enable();
+    } else {
+        autoLauncher.disable();
+    }
+
+    serial.scan( scanList );
+
+    ipcMain.handle( 'getOpenStatus', async event => {
+        if(connected){
+        event.sender.send( 'connected', {
+                map: buttonMap,
+                profile: await serial.invoke( "list -c y -p base" ),
+                port: connected
+            } );
         }
+        return {
+            list: comList,
+            connected
+        }
+    } );
+
+    ipcMain.on( 'connect', async ( event, comPort ) => {
+        connectToKeyJam( comPort );
+        config.defaultComPort = comPort;
+    } );
+
+    ipcMain.on( 'disconnect', ( event ) => {
+        serial.disconnect();
     } );
 
     ipcMain.handle( 'changeInput', async ( event, { input, mapping } ) => {
@@ -205,6 +236,52 @@ app.whenReady().then( () => {
         return config.getMacroByInput( macroID );
     } );
 } );
+
+app.on( 'window-all-closed', () => {
+    //don't quit
+} )
+
+function scanList( list ) {
+    comList = list;
+    if ( list.map( v => v.path ).includes( config.defaultComPort ) ) {
+        if(!connected) {
+            connectToKeyJam( config.defaultComPort );
+        }
+    } else if ( appWindow ) {
+        appWindow.webContents.send( 'comList', list );
+    }
+}
+
+function connectToKeyJam( comPort ) {
+    console.log( `Connecting to board on ${comPort}` );
+    serial.connect( comPort )
+        .then( () => serial.invoke( "list -p map" ) )
+        .then( map => {
+            buttonMap = map;
+            serial.on( 'press', handlePress );
+            serial.scan( scanList );
+            serial.onClose( () => {
+                console.log( `Disconnected from ${connected}` )
+                connected = null;
+                if ( appWindow ) {
+                    appWindow.webContents.send( 'disconnected' );
+                }
+            } );
+        } )
+        .then( async () => {
+            connected = comPort;
+            if ( appWindow ) {
+                appWindow.webContents.send( 'connected', {
+                    map: buttonMap,
+                    profile: await serial.invoke( "list -c y -p base" ),
+                    port: connected
+                } );
+            }
+        } )
+        .catch( e => {
+            console.error( `Failed to connect on ${comPort}`, e );
+        } );
+}
 
 const axios = require( 'axios' );
 

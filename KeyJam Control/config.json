@@ -13,5 +13,6 @@
       "id": "59a1f86a-e2ad-4729-b3ab-77c83376386e"
     }
   ],
-  "setMacros": {}
+  "setMacros": {},
+  "defaultComPort": "COM8"
 }

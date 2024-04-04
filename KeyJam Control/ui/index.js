@@ -3,12 +3,44 @@ let currentlyEditingButton = null;
 let currentProfileDate;
 let map;
 
-async function loadProfile( type, name ) {
-    let data = await electron.invoke( 'loadProfile', { type, name } );
-    console.log(data);
+electron.on( 'connected', ( data ) => {
     currentProfileDate = data.profile;
     map = data.map;
+    setConnectedStatus( 'connected', data.port );
     loadButtons();
+} );
+
+electron.on( 'disconnected', ( data ) => {
+    currentProfileDate = undefined;
+    map = undefined;
+    setConnectedStatus( 'disconnected' );
+    clearButtons();
+} );
+
+let oldList = [];
+electron.on( 'comList', ( list ) => {
+    if ( !deepEqual( list, oldList ) ) {
+        updateDeviceList( list );
+        oldList = list;
+    }
+} );
+
+function updateDeviceList( list ) {
+    let html = "";
+    list.forEach( p => html += `<option value="${ p.path }">${ p.path }</option>` );
+    document.getElementById( 'comSelector' ).innerHTML = html;
+}
+
+function connectCom() {
+    electron.send( 'connect', document.getElementById( 'comSelector' ).value );
+}
+
+function disconnectCom() {
+    electron.send( 'disconnect' );
+}
+
+function clearButtons() {
+    document.getElementById( 'buttonHolder' ).innerHTML = "";
 }
 
 function loadButtons() {
@@ -46,7 +78,6 @@ ${ getKeyFromCode( key )[0] === "F" ? getKeyFromCode( key ) : getKeyFromCode( ke
 }
 
 function createRotaryDisplay( encoder ) {
-    console.log( encoder );
     return `
     <div 
         class="box m-2 p-1" 
@@ -88,14 +119,14 @@ ${ getKeyFromCode( key )[0] === "F" ? getKeyFromCode( key ) : getKeyFromCode( ke
     console.log( currentlyEditingButton.buttonMap.consumerKey );
     document.getElementById( "editButtonConsumerSelect" ).value = getConsumerKeyFromCode( currentlyEditingButton.buttonMap.consumerKey ) ?? "none"
     document.getElementById( "editButtonMacro" ).checked = !!currentlyEditingButton.buttonMap.macro;
-    document.getElementById("editButtonHold").checked = !!currentlyEditingButton.buttonMap.hold;
+    document.getElementById( "editButtonHold" ).checked = !!currentlyEditingButton.buttonMap.hold;
 
     //load Macros into dropdown
-    let selected =  await electron.invoke( 'getMacroByInput', currentlyEditingButton.number );
+    let selected = await electron.invoke( 'getMacroByInput', currentlyEditingButton.number );
     let macros = await electron.invoke( 'listMacros' );
-    let html = `<option ${!selected ? "selected" : ""} value="none">None</option>`;
-    macros.forEach( m => html += `<option value="${m.id}" ${m.id === selected ? "selected" : ""}>${m.name}</option>`);
-    document.getElementById('editButtonMacroSelect').innerHTML = html;
+    let html = `<option ${ !selected ? "selected" : "" } value="none">None</option>`;
+    macros.forEach( m => html += `<option value="${ m.id }" ${ m.id === selected ? "selected" : "" }>${ m.name }</option>` );
+    document.getElementById( 'editButtonMacroSelect' ).innerHTML = html;
 }
 
 function editButtonAddKey() {
@@ -123,12 +154,12 @@ function editButtonDeleteKey( key ) {
 }
 
 async function editButtonSave() {
-    currentlyEditingButton.buttonMap.hold = currentlyEditingButton.buttonMap.keys?.length === 1 ? document.getElementById("editButtonHold").checked : false;
+    currentlyEditingButton.buttonMap.hold = currentlyEditingButton.buttonMap.keys?.length === 1 ? document.getElementById( "editButtonHold" ).checked : false;
 
     const usingMacro = !!document.getElementById( "editButtonMacro" ).checked;
-    let selectedMacroID = document.getElementById("editButtonMacroSelect").value;
+    let selectedMacroID = document.getElementById( "editButtonMacroSelect" ).value;
     currentlyEditingButton.buttonMap.macro = usingMacro;
-    if(!usingMacro || selectedMacroID === "none"){
+    if ( !usingMacro || selectedMacroID === "none" ) {
         selectedMacroID = undefined;
     }
     await electron.invoke( 'setMacro', {
@@ -155,31 +186,49 @@ async function editButtonSave() {
     }
 }
 
- function openMacroEditor(){
+function openMacroEditor() {
     openModal( "editMacros" );
     loadMacroEditor();
 }
 
-async function loadMacroEditor(){
+async function loadMacroEditor() {
     let macros = await electron.invoke( 'listMacros' );
 
     //list macros
     let html = "";
-    macros.forEach( m => html += `<li>${m.name}<span class="pl-6" onclick="removeMacro('${m.id}')">X</span></li>`);
-    document.getElementById('macroList').innerHTML = html;
+    macros.forEach( m => html += `<li>${ m.name }<span class="pl-6 is-danger" onclick="removeMacro('${ m.id }')"><i class="fa fa-x"></i></span></li>` );
+    document.getElementById( 'macroList' ).innerHTML = html;
 }
 
-async function addMacro(){
+async function addMacro() {
     let macro = {
-        name: document.getElementById("newMacroName").value,
-        type:document.getElementById("newMacroType").value,
-        text: document.getElementById("newMacroText").value
+        name: document.getElementById( "newMacroName" ).value,
+        type: document.getElementById( "newMacroType" ).value,
+        text: document.getElementById( "newMacroText" ).value
     }
     await electron.invoke( 'addMacro', macro );
     await loadMacroEditor();
 }
 
-async function removeMacro(id){
+async function removeMacro( id ) {
     await electron.invoke( 'removeMacro', id );
     await loadMacroEditor();
+}
+
+//get status once opened
+electron.invoke( 'getOpenStatus' ).then( ( { list, connected } ) => {
+    updateDeviceList( list );
+    setConnectedStatus( connected ? 'connected' : 'disconnected', connected );
+} );
+
+function setConnectedStatus( status, port ) {
+    let statusElement = document.getElementById( 'connectingMessage' );
+    switch ( status ) {
+        case "disconnected":
+            statusElement.innerHTML = "disconnected";
+            break;
+        case "connected":
+            statusElement.innerHTML = `connected to ${ port }`;
+            break;
+    }
 }

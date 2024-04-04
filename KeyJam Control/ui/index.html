@@ -4,14 +4,32 @@
     <meta charset="UTF-8">
     <title>KeyJam Control</title>
     <link rel="stylesheet" type="text/css" href="bulma.css">
+    <script src="../node_modules/@fortawesome/fontawesome-free/js/all.js"></script>
     <script src="keycodes.js"></script>
     <script src="helper.js"></script>
 </head>
-<body class="p-1">
-<h1 class="title is-2">KeyJam Control</h1>
+<body class="p-3">
 <div class="is-flex is-justify-content-space-between">
-    <button class="button" onclick="loadProfile('base', 'default')">Load Default Base Profile</button>
+    <h1 class="title is-2">KeyJam Control</h1>
     <button class="button" onclick="openMacroEditor()">Edit Macros</button>
+</div>
+<div class="is-flex is-justify-content-space-between">
+    <div>
+        <div class="select">
+            <select id="comSelector">
+
+            </select>
+        </div>
+        <button class="button" onclick="connectCom()">Connect</button>
+        <button class="button" onclick="disconnectCom()">Disconnect</button>
+    </div>
+   <div id="connectingMessage">
+       Connecting...
+   </div>
+    <div>
+        <!--Select Profile:-->
+    </div>
+   <!-- <button class="button" onclick="loadProfile('base', 'default')">Load Default Base Profile</button>-->
 </div>
 <div id="buttonHolder">
 
