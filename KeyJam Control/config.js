@@ -1,5 +1,6 @@
 const fs = require( 'fs' );
 const { v4: uuidv4 } = require( 'uuid' );
+const path = require( 'node:path' );
 
 module.exports = {
     addMacro,
@@ -28,11 +29,11 @@ readConfig().then( () => {
 async function readConfig() {
     return new Promise( ( resolve, reject ) => {
         try {
-            fs.access( "config.json", fs.constants.F_OK, ( err ) => {
+            fs.access( path.join( __dirname, 'config.json' ), fs.constants.F_OK, ( err ) => {
                 if ( err ) {
                     updateConfig();
                 }
-                fs.readFile( "config.json", 'utf8', ( err, data ) => {
+                fs.readFile( path.join( __dirname, 'config.json' ), 'utf8', ( err, data ) => {
                     if ( err ) {
                         throw err;
                     }
@@ -48,7 +49,7 @@ async function readConfig() {
 async function updateConfig() {
     return new Promise( ( resolve, reject ) => {
         try {
-            fs.writeFile( "config.json", JSON.stringify( config, undefined, 2 ), 'utf8', () => {
+            fs.writeFile( path.join( __dirname, 'config.json' ), JSON.stringify( config, undefined, 2 ), 'utf8', () => {
                 resolve();
             } );
         } catch ( err ) {
