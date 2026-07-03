@@ -22,7 +22,7 @@
   * Rotary encoder cap
   * Slider cap
 * 11x MX switches
-* 4x m2.5x16 screws
+* 4x m2x16 screws
 * 4x Clear self-adhesive rubber feet
 
 ## Assembly
